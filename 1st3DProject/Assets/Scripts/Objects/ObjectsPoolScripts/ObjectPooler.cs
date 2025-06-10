@@ -1,0 +1,70 @@
+using System.Collections.Generic;
+using Unity.Mathematics;
+using Unity.VisualScripting;
+using UnityEngine;
+
+public class ObjectPooler : MonoBehaviour
+{
+    public ObjectMovement movement;
+    [SerializeField] private Transform m_targetToFollow;
+    [System.Serializable]
+    class Pool
+    {
+        public string objectName;
+        public GameObject prefab;
+        public int poolSize;
+
+    }
+    #region Singleton
+    public static ObjectPooler instance;
+    private void Awake()
+    {
+        instance = this;
+    }
+    #endregion
+
+    [HideInInspector] public Dictionary<string, Queue<GameObject>> objectPoolDictionary;
+    [SerializeField]private List<Pool> pools;
+    void Start()
+    {
+        //movement = GameObject.FindGameObjectWithTag("Obstacle").GetComponent<ObjectMovement>();
+        if (movement != null) {
+            Debug.Log("Script found");
+        }
+        objectPoolDictionary = new Dictionary<string, Queue<GameObject>>();
+
+        foreach (var pool in pools)
+        {
+            Queue<GameObject> objectPool = new Queue<GameObject>();
+            for (int i = 0; i < pool.poolSize; i++)
+            {
+                GameObject poolObj = Instantiate(pool.prefab);
+                poolObj.SetActive(false);
+                objectPool.Enqueue(poolObj);
+            }
+            objectPoolDictionary.Add(pool.objectName, objectPool);
+        }
+    }
+    public GameObject SpawnFromPool(string objName, Vector3 position, quaternion rotation)
+    {
+        
+        if (!objectPoolDictionary.ContainsKey(objName))
+        {
+            Debug.LogWarning($"Object with name {objName} is not found");
+        }
+        GameObject objToSpawn=objectPoolDictionary[objName].Dequeue();
+        objToSpawn.SetActive(true);
+        objToSpawn.transform.SetPositionAndRotation(position, rotation);
+        IPooledObject pooledObj=objToSpawn.GetComponent<IPooledObject>();
+        if (pooledObj != null)
+        {
+            Debug.Log(m_targetToFollow);
+            //movement.Initialize(m_targetToFollow);
+            pooledObj.Initialize(m_targetToFollow);
+            pooledObj.OnSpawnObject();
+        }
+        objectPoolDictionary[objName].Enqueue(objToSpawn);
+        return objToSpawn;
+    }
+
+}
