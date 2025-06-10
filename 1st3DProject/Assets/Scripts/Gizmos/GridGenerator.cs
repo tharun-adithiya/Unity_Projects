@@ -21,13 +21,13 @@ public class GridGenerator : MonoBehaviour
     {
         randomPosX = Random.Range(-xGrid, xGrid);
         randomPosZ = Random.Range(-zGrid, zGrid);
-        foreach (var point in GridDetails())
+        /*foreach (var point in GridDetails())
         {
             m_WorldPosition.Add(point);
         }
         //randomPosXFinal = Random.Range(m_WorldPosition[0].x, m_WorldPosition[m_WorldPosition.Count-1].x);
         //randomPosXFinal = Random.Range(m_WorldPosition[0].z, m_WorldPosition[m_WorldPosition.Count-1].z);
-        //randomPosXFinal = Random.Range(m_WorldPosition[0].z, m_WorldPosition[m_WorldPosition.Count-1].z);
+        //randomPosXFinal = Random.Range(m_WorldPosition[0].z, m_WorldPosition[m_WorldPosition.Count-1].z);*/
         if (Input.GetKeyDown(KeyCode.F))
         {
             Debug.Log("Xpos: " + randomPosX + ", Zpos: " + randomPosZ);
