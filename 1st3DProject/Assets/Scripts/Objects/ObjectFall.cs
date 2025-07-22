@@ -29,7 +29,7 @@ public class ObjectFall : MonoBehaviour
         {
             yield return new WaitForSeconds(spawnRate);
             
-            m_pooler.SpawnFromPool("FallingSphere",randomPosition,Quaternion.identity);
+            m_pooler.SpawnFromPool("Asteroid2b",randomPosition,Quaternion.identity);
             ObjectMovement movement =m_pooler.GetComponent<ObjectMovement>();
            // movement.Initialize(GameObject.Find("Player").transform);
             //Debug.Log("Xpos:" + randomPosition.x + ", Zpos:" + randomPosition.z);

@@ -6,7 +6,6 @@ public class GridGenerator : MonoBehaviour
 {
     public int xGrid = 10;
     public int zGrid = 10;
-    [SerializeField] private GameObject cube;
     [HideInInspector] public float randomPosX;
     [HideInInspector] public float randomPosZ;
     [HideInInspector] public float randomPosXFinal;
@@ -26,7 +25,7 @@ public class GridGenerator : MonoBehaviour
             m_WorldPosition.Add(point);
         }
         //randomPosXFinal = Random.Range(m_WorldPosition[0].x, m_WorldPosition[m_WorldPosition.Count-1].x);
-        //randomPosXFinal = Random.Range(m_WorldPosition[0].z, m_WorldPosition[m_WorldPosition.Count-1].z);
+        //randomPosZFinal = Random.Range(m_WorldPosition[0].z, m_WorldPosition[m_WorldPosition.Count-1].z);
         //randomPosXFinal = Random.Range(m_WorldPosition[0].z, m_WorldPosition[m_WorldPosition.Count-1].z);*/
         if (Input.GetKeyDown(KeyCode.F))
         {

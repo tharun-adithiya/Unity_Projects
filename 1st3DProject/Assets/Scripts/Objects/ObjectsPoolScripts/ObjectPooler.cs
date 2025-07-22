@@ -5,7 +5,7 @@ using UnityEngine;
 
 public class ObjectPooler : MonoBehaviour
 {
-    public ObjectMovement movement;
+    private ObjectMovement movement;
     [SerializeField] private Transform m_targetToFollow;
     [System.Serializable]
     class Pool
@@ -27,10 +27,9 @@ public class ObjectPooler : MonoBehaviour
     [SerializeField]private List<Pool> pools;
     void Start()
     {
-        //movement = GameObject.FindGameObjectWithTag("Obstacle").GetComponent<ObjectMovement>();
-        if (movement != null) {
-            Debug.Log("Script found");
-        }
+
+       
+
         objectPoolDictionary = new Dictionary<string, Queue<GameObject>>();
 
         foreach (var pool in pools)
@@ -54,6 +53,7 @@ public class ObjectPooler : MonoBehaviour
         }
         GameObject objToSpawn=objectPoolDictionary[objName].Dequeue();
         objToSpawn.SetActive(true);
+
         objToSpawn.transform.SetPositionAndRotation(position, rotation);
         IPooledObject pooledObj=objToSpawn.GetComponent<IPooledObject>();
         if (pooledObj != null)
@@ -61,7 +61,9 @@ public class ObjectPooler : MonoBehaviour
             Debug.Log(m_targetToFollow);
             //movement.Initialize(m_targetToFollow);
             pooledObj.Initialize(m_targetToFollow);
-            pooledObj.OnSpawnObject();
+
+             pooledObj.OnSpawnObject();
+
         }
         objectPoolDictionary[objName].Enqueue(objToSpawn);
         return objToSpawn;
