@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
+using System.Linq;
 using UnityEngine.XR;
 
 public class PlayerMovement : MonoBehaviour
@@ -9,8 +10,9 @@ public class PlayerMovement : MonoBehaviour
     [Header("Character Config")]
     public CharacterController controller;
     public Animator animator;
-    [SerializeField] private Transform meshTransform;
-    [SerializeField] private UIManager uiManager;
+    [SerializeField] private Transform m_meshTransform;
+    [SerializeField] private UIManager m_uiManager;
+    [SerializeField] private PlayerInventory m_inventory;
 
     [Header("Movement Settings")]
     [SerializeField] private float m_speed = 5f;
@@ -20,15 +22,15 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private Transform groundChecker;
     [SerializeField] private float m_checkRadius = 0.2f;
     [SerializeField] private LayerMask m_ground;
-    [SerializeField] private AnimationClip m_LandingClip;
-    [SerializeField] private AnimationClip m_JumpingClip;
+
     [Header("Camera and Audio Settings")]
     [SerializeField] private PlayerAudio m_footAudio;
     [SerializeField] private Transform cam;
 
     private bool m_isPlayerInTrigger=false;
     private bool m_isPlayerInLanding = false;
-
+    [HideInInspector] public bool m_isPlayerInCarRadius;
+    
     private Vector3 m_inputDir;
     private Vector3 m_velocity;
     private float m_moveX;
@@ -63,7 +65,7 @@ public class PlayerMovement : MonoBehaviour
         
         m_inputDir = new Vector3(m_moveX, 0f, m_moveZ).normalized;
 
-        //Debug.Log(m_inputDir.magnitude);
+      
         animator.SetFloat("InputMagnitude", m_inputDir.magnitude);
 
        
@@ -73,9 +75,9 @@ public class PlayerMovement : MonoBehaviour
             
             targetAngle = Mathf.Atan2(m_inputDir.x, m_inputDir.z) * Mathf.Rad2Deg + cam.eulerAngles.y;
 
-            float smoothedAngle = targetAngle;//Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref turnSmoothVelocity, turnDamping);
+            float smoothedAngle = targetAngle;
             transform.rotation = Quaternion.Euler(0f, smoothedAngle, 0f);
-            meshTransform.rotation= Quaternion.Euler(0f, smoothedAngle, 0f);
+            m_meshTransform.rotation= Quaternion.Euler(0f, smoothedAngle, 0f);
 
             Vector3 moveDir = Quaternion.Euler(0f, smoothedAngle, 0f) * Vector3.forward;
            
@@ -113,9 +115,6 @@ public class PlayerMovement : MonoBehaviour
                 if (Input.GetKeyDown(KeyCode.Space))
                 {
                     Debug.Log("SpacePressed");
-                    // float velocityInJumpState = m_speed / 1.5f;
-                    //m_speed = velocityInJumpState;
-                    
                     StartCoroutine(JumpChecker());
                     animator.SetBool("IsJumping", true);
                     m_velocity.y = Mathf.Sqrt(-2 * m_jumpSpeed * m_gravity);
@@ -134,16 +133,13 @@ public class PlayerMovement : MonoBehaviour
         }
         m_velocity.y += m_gravity * Time.deltaTime;
         controller.Move(m_velocity * Time.deltaTime);
-        /*if (grounded)
-        {
-            StartCoroutine(LandingCheck());
-        }*/
+
 
     }
 
     IEnumerator JumpChecker()
     {
-        //yield return new WaitForSeconds(m_JumpingClip.length);
+
         animator.SetBool("IsFalling",true);
         if (!IsGrounded())
         {
@@ -188,9 +184,17 @@ public class PlayerMovement : MonoBehaviour
         {
             m_isPlayerInTrigger = true;
             var interact = other.GetComponent<IInteractionManager>();
-            uiManager.OnEnterCollectibleZone(m_isPlayerInTrigger,other.gameObject);
+            m_uiManager.OnEnterCollectibleZone(m_isPlayerInTrigger,other.gameObject);
             interact?.OnPassTrigger(other.name);
         }
+        if (other.gameObject.CompareTag("Delorean")) 
+        {
+            m_isPlayerInTrigger = true;
+            m_isPlayerInCarRadius = true;
+            m_uiManager.OnEnterDeloreanInteraction(m_isPlayerInTrigger); 
+        }
+
+
     }
     private void OnTriggerExit(Collider other)
     {
@@ -198,8 +202,13 @@ public class PlayerMovement : MonoBehaviour
         {
             Debug.Log("Player exits zone");
             m_isPlayerInTrigger=false;
-            uiManager.OnEnterCollectibleZone(m_isPlayerInTrigger,other.gameObject);
-
+            m_uiManager.OnEnterCollectibleZone(m_isPlayerInTrigger,other.gameObject);
+        }
+        if (other.gameObject.CompareTag("Delorean"))
+        {
+            m_isPlayerInTrigger = false;
+            m_isPlayerInCarRadius = false;
+            m_uiManager.OnEnterDeloreanInteraction(m_isPlayerInTrigger); 
         }
     }
 

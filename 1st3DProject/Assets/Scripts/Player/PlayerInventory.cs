@@ -9,6 +9,7 @@ public class PlayerInventory : MonoBehaviour
     [SerializeField] private List<RawImage> objectImages= new List<RawImage>();
     [SerializeField] private AudioClip m_finalAudio;
     [SerializeField] private PlayerAudio m_playerAudio;
+    
     private int m_imageListBoundChecker = 0;
 
     private void Start()
@@ -37,15 +38,7 @@ public class PlayerInventory : MonoBehaviour
             m_imageListBoundChecker++;
         }
         Debug.Log(objectToAdd + " added to inventory");
-        if (Inventory.Count == 4)
-        {
-            StartCoroutine(PlayFinalAudio(m_finalAudio));
-        }
+
     }
-    IEnumerator PlayFinalAudio(AudioClip finalAudio)
-    {
-        yield return new WaitForSeconds(6f);
-        m_playerAudio.playerVoice.clip = finalAudio;
-        m_playerAudio.playerVoice.Play();
-    }
+
 }
