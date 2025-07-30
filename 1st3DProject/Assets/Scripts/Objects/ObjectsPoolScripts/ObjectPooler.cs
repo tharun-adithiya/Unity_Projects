@@ -6,9 +6,12 @@ using UnityEngine;
 public class ObjectPooler : MonoBehaviour
 {
     private ObjectMovement movement;
-    [SerializeField] private Transform m_targetToFollow;
+    public Transform m_targetToFollow;
+    [HideInInspector] public static ObjectPooler pooler;
+    [SerializeField] private AsteroidRainStarter m_rainStarter;
+    private Queue<GameObject> m_objectPool = new Queue<GameObject>();
     [System.Serializable]
-    class Pool
+    public class Pool
     {
         public string objectName;
         public GameObject prefab;
@@ -23,25 +26,25 @@ public class ObjectPooler : MonoBehaviour
     }
     #endregion
 
+
     [HideInInspector] public Dictionary<string, Queue<GameObject>> objectPoolDictionary;
     [SerializeField]private List<Pool> pools;
     void Start()
     {
-
-       
-
+        
         objectPoolDictionary = new Dictionary<string, Queue<GameObject>>();
 
         foreach (var pool in pools)
         {
-            Queue<GameObject> objectPool = new Queue<GameObject>();
+            //Queue<GameObject> objectPool = new Queue<GameObject>();
             for (int i = 0; i < pool.poolSize; i++)
             {
                 GameObject poolObj = Instantiate(pool.prefab);
                 poolObj.SetActive(false);
-                objectPool.Enqueue(poolObj);
+                
+                m_objectPool.Enqueue(poolObj);
             }
-            objectPoolDictionary.Add(pool.objectName, objectPool);
+            objectPoolDictionary.Add(pool.objectName, m_objectPool);
         }
     }
     public GameObject SpawnFromPool(string objName, Vector3 position, quaternion rotation)
@@ -51,7 +54,9 @@ public class ObjectPooler : MonoBehaviour
         {
             Debug.LogWarning($"Object with name {objName} is not found");
         }
+
         GameObject objToSpawn=objectPoolDictionary[objName].Dequeue();
+
         objToSpawn.SetActive(true);
 
         objToSpawn.transform.SetPositionAndRotation(position, rotation);
