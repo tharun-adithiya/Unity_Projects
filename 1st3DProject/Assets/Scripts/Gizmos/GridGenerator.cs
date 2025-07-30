@@ -8,29 +8,12 @@ public class GridGenerator : MonoBehaviour
     public int zGrid = 10;
     [HideInInspector] public float randomPosX;
     [HideInInspector] public float randomPosZ;
-    [HideInInspector] public float randomPosXFinal;
-    [HideInInspector] public float randomPosZFinal;
-    private List<Vector3> m_WorldPosition;
 
-    private void Start()
-    {
-        m_WorldPosition = new List<Vector3>();
-    }
     private void Update()
     {
         randomPosX = Random.Range(-xGrid, xGrid);
         randomPosZ = Random.Range(-zGrid, zGrid);
-        /*foreach (var point in GridDetails())
-        {
-            m_WorldPosition.Add(point);
-        }
-        //randomPosXFinal = Random.Range(m_WorldPosition[0].x, m_WorldPosition[m_WorldPosition.Count-1].x);
-        //randomPosZFinal = Random.Range(m_WorldPosition[0].z, m_WorldPosition[m_WorldPosition.Count-1].z);
-        //randomPosXFinal = Random.Range(m_WorldPosition[0].z, m_WorldPosition[m_WorldPosition.Count-1].z);*/
-        if (Input.GetKeyDown(KeyCode.F))
-        {
-            Debug.Log("Xpos: " + randomPosX + ", Zpos: " + randomPosZ);
-        }
+
     }
 
     private void OnDrawGizmos()
@@ -39,7 +22,7 @@ public class GridGenerator : MonoBehaviour
 
         foreach (var point in GridDetails())
         {
-            //m_WorldPosition.Add(point);
+            
             Gizmos.DrawWireCube(point, new Vector3(1, 0, 1));
         }
     }
