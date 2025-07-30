@@ -4,11 +4,10 @@ using UnityEngine;
 public class ObjectFall : MonoBehaviour
 {
     private Transform _targetTransform;
-    //public ObjectMovement movement;
     public GridGenerator m_generator;
     private Vector3 randomPosition;
-    [SerializeField]private float m_spawnRate=0.5f;
-    [SerializeField] private float m_spawnHeight = 25f;
+    public float spawnRate=0.5f;
+    public float spawnHeight = 25f;
     private ObjectPooler m_pooler;
 
 
@@ -16,12 +15,12 @@ public class ObjectFall : MonoBehaviour
     {
         _targetTransform=GameObject.FindGameObjectWithTag("Player").GetComponent<Transform>();
         m_pooler = ObjectPooler.instance;
-        StartCoroutine(SpawnObstacle(m_spawnRate));
+        StartCoroutine(SpawnObstacle(spawnRate));
     }
 
     void FixedUpdate()
     {
-        randomPosition = new Vector3(m_generator.randomPosX, m_spawnHeight, m_generator.randomPosZ);
+        randomPosition = new Vector3(m_generator.randomPosX, spawnHeight, m_generator.randomPosZ);
     }
     private IEnumerator SpawnObstacle(float spawnRate)
     {
@@ -31,8 +30,7 @@ public class ObjectFall : MonoBehaviour
             
             m_pooler.SpawnFromPool("Asteroid2b",randomPosition,Quaternion.identity);
             ObjectMovement movement =m_pooler.GetComponent<ObjectMovement>();
-           // movement.Initialize(GameObject.Find("Player").transform);
-            //Debug.Log("Xpos:" + randomPosition.x + ", Zpos:" + randomPosition.z);
+
         }
         
     }

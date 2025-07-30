@@ -6,7 +6,7 @@ using UnityEngine;
 
 public class ObjectMovement : MonoBehaviour, IPooledObject
 {
-    public GameObject Asteroid;
+    
     private Transform m_target;
     [SerializeField] private float m_fallSpeed = 5f;
     private Rigidbody m_rb;
@@ -18,7 +18,6 @@ public class ObjectMovement : MonoBehaviour, IPooledObject
     private CinemachineImpulseSource m_impulseSource;
     [SerializeField] private GameObject m_imapctParticles;
     
-    //[SerializeField]private Transform m_imapctPosition;
     private Terrain m_terrain;
     private ObjectPooler m_pool;
     public static float damage = 25f;
@@ -51,7 +50,6 @@ public class ObjectMovement : MonoBehaviour, IPooledObject
 
         if (!m_isStopFollowing)
         {
-            //ImpactRadiusMarker(m_target);
             OnSpawnObject();
             m_isStopFollowing = false;
         }
@@ -59,7 +57,7 @@ public class ObjectMovement : MonoBehaviour, IPooledObject
     }
     private void OnCollisionEnter(Collision collision)
     {
-        if (collision.gameObject.CompareTag("Player"))
+        if (collision.gameObject.CompareTag("PlayerBody"))
         {
             print("ObjectCollided");
             m_isStopFollowing = true;
@@ -76,21 +74,8 @@ public class ObjectMovement : MonoBehaviour, IPooledObject
 
     public void OnSpawnObject()
     {
-        
         transform.position = Vector3.Lerp(transform.position, m_target.position, m_fallSpeed * Time.deltaTime);
     }
-
-    /*public void ImpactRadiusMarker(Transform impactRadius)
-    {
-        if (impactRadius == null)
-        {
-            Debug.LogWarning("ImpactRadius is not assigned");
-        }
-        float terrainHeight = m_terrain.SampleHeight(impactRadius.position);
-        Vector3 adjustedPositionForMarker = new Vector3(impactRadius.position.x, terrainHeight, impactRadius.position.z);
-        m_pool.SpawnFromPool("AttackRadiusIndicator", adjustedPositionForMarker, quaternion.identity);
-        return;
-    }*/
 
     public IEnumerator OnHitGround(Vector3 effectPosition)
     {
@@ -100,11 +85,6 @@ public class ObjectMovement : MonoBehaviour, IPooledObject
         //var hitEffect = Instantiate(m_imapctParticles,adjustedPosition,Quaternion.identity);     //This Line of Code is used without implementation of object pool.
         yield return null;
         // GameObject.Destroy(hitEffect);                                                         //Used along with Instantiate when object pool is not implemented.  
-    }
-
-    private bool IsGrounded()
-    {
-        return Physics.CheckSphere(groundChecker.position, m_groundCheckRadius, m_groundLayer);
     }
 
 }
