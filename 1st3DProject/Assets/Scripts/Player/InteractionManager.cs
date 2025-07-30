@@ -1,9 +1,12 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class InteractionManger : MonoBehaviour
 {
     private PlayerAudio m_playerAudio;
+    [SerializeField] private PlayerInventory m_playerInventory;
+    [SerializeField] private PlayerMovement m_playerMovement;
     public List<AudioClip> playerInteractionAudio = new List<AudioClip>();
     private void Start()
     {
@@ -43,6 +46,17 @@ public class InteractionManger : MonoBehaviour
                 m_playerAudio.playerVoice.Play();
                 break;
         }
+        if (m_playerInventory.Inventory.Count >= 5)
+        {
+            StartCoroutine(PlayFinalAudio());
+        }
     }
-
+    IEnumerator PlayFinalAudio()
+    {
+        
+        m_playerAudio.playerVoice.clip = playerInteractionAudio[4];
+        yield return new WaitForSeconds(5f);
+        m_playerAudio.playerVoice.Play();
+    }
 }
+
