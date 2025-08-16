@@ -7,15 +7,16 @@ public class PlayerInventory : MonoBehaviour
 {
     [HideInInspector] public List<GameObject> Inventory = new List<GameObject>();
     [SerializeField] private List<RawImage> objectImages= new List<RawImage>();
-    [SerializeField] private AudioClip m_finalAudio;
-    [SerializeField] private PlayerAudio m_playerAudio;
-    
+    [SerializeField] private GameManager m_gameManager;
+    private bool m_isCalledOnInventoryFull;
+
     private int m_imageListBoundChecker = 0;
 
     private void Start()
     {
-        
+        m_isCalledOnInventoryFull = false;
     }
+
     public void AddToInventory(GameObject objectToAdd)
     {
         RawImage objectImage= objectToAdd.GetComponent<RawImage>();
@@ -40,5 +41,16 @@ public class PlayerInventory : MonoBehaviour
         Debug.Log(objectToAdd + " added to inventory");
 
     }
-
+    private void Update()
+    {
+        if (Inventory.Count >= 4&&!m_isCalledOnInventoryFull)
+        {
+            m_gameManager.OnInventoryFull();
+            m_isCalledOnInventoryFull = true;
+        }
+        else
+        {
+            return ;
+        }
+    }
 }

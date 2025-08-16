@@ -8,7 +8,7 @@ public class PlayerHealth : MonoBehaviour
     public static float playerHealth = 100f;
     private CharacterController m_movement;
 
-    [SerializeField] private GameOverScene scene;
+    [SerializeField] private UIManager m_uiManager;
     [SerializeField] private Animator animator;
 
     //Knockback functions
@@ -16,6 +16,7 @@ public class PlayerHealth : MonoBehaviour
     private Vector3 knockbackVelocity; // Current knockback velocity
     private float knockbackDuration = 0f; // Time left for knockback
     private bool isKnockedBack = false; // Whether the player is currently being knocked back
+    [SerializeField] private AudioManager m_audioManger;
 
     [SerializeField] private float knockbackHorizontalForce = 5f; // Horizontal knockback force
     [SerializeField] private float knockbackVerticalForce = 10f; // Vertical knockback force
@@ -23,12 +24,12 @@ public class PlayerHealth : MonoBehaviour
 
     private void Start()
     {
-        // Find the CharacterController on the player
+        
         m_movement = GameObject.FindGameObjectWithTag("PlayerBody").GetComponent<CharacterController>();
         animator=GameObject.FindGameObjectWithTag("Player").GetComponent<Animator>();
         if (m_movement == null)
         {
-            //Debug.LogWarning("CharacterController not found");
+            Debug.LogWarning("CharacterController not found");
         }
     }
 
@@ -70,9 +71,10 @@ public class PlayerHealth : MonoBehaviour
         // Trigger knockback when colliding with an obstacle
         if (collision.gameObject.CompareTag("Obstacle"))
         {
+            m_audioManger.OnPlayerDamage();
+            m_uiManager.OnRecieveDamage(ObjectMovement.damage);
             ApplyKnockback(collision.transform.position);
             playerHealth -= ObjectMovement.damage;
-
             Debug.Log($"Player Health: {playerHealth}");
         }
     }
@@ -100,6 +102,6 @@ public class PlayerHealth : MonoBehaviour
         playerHealth = 100f;
 
         yield return new WaitForSeconds(0.5f);
-        scene.GameOver();
+        m_uiManager.OnGameOver();
     }
 }
