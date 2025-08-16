@@ -6,18 +6,13 @@ using UnityEngine;
 
 public class ObjectMovement : MonoBehaviour, IPooledObject
 {
-    
+
     private Transform m_target;
-    [SerializeField] private float m_fallSpeed = 5f;
-    private Rigidbody m_rb;
-    [HideInInspector]public bool m_isStopFollowing = false;
-    private Transform m_asteroidTransform;
-    [SerializeField] private LayerMask m_groundLayer;
-    private float m_groundCheckRadius = 0.5f;
-    [SerializeField] private Transform groundChecker;
+    public float fallSpeed = 5f;
+    [HideInInspector] public bool m_isStopFollowing = false;
     private CinemachineImpulseSource m_impulseSource;
     [SerializeField] private GameObject m_imapctParticles;
-    
+
     private Terrain m_terrain;
     private ObjectPooler m_pool;
     public static float damage = 25f;
@@ -28,14 +23,12 @@ public class ObjectMovement : MonoBehaviour, IPooledObject
     {
         m_pool = ObjectPooler.instance;
         m_terrain = Terrain.activeTerrain;
-        m_asteroidTransform = gameObject.transform;
         m_impulseSource = GetComponent<CinemachineImpulseSource>();
         m_target = GameObject.Find("Player").transform;
         if (m_target != null)
         {
             Debug.Log("Target  found");
         }
-        m_rb = GetComponent<Rigidbody>();
 
     }
 
@@ -74,7 +67,7 @@ public class ObjectMovement : MonoBehaviour, IPooledObject
 
     public void OnSpawnObject()
     {
-        transform.position = Vector3.Lerp(transform.position, m_target.position, m_fallSpeed * Time.deltaTime);
+        transform.position = Vector3.Lerp(transform.position, m_target.position, fallSpeed * Time.deltaTime);
     }
 
     public IEnumerator OnHitGround(Vector3 effectPosition)
