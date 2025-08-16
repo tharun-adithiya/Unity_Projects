@@ -15,16 +15,16 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private PlayerInventory m_inventory;
 
     [Header("Movement Settings")]
-    [SerializeField] private float m_speed = 5f;
-    [SerializeField] private float m_dashSpeed = 5f;
+    public float playerSpeed = 5f;
     [SerializeField] private float m_jumpSpeed = 5f;
     [SerializeField] private float m_gravity = -9.81f;
-    [SerializeField] private Transform groundChecker;
+    [SerializeField] private Transform m_groundChecker;
+    [SerializeField] private Transform m_groundCheckerForAudio;
     [SerializeField] private float m_checkRadius = 0.2f;
+    [SerializeField] private float m_footSoundCheckRadius = 0.2f;
     [SerializeField] private LayerMask m_ground;
 
-    [Header("Camera and Audio Settings")]
-    [SerializeField] private PlayerAudio m_footAudio;
+    [Header("Camera Settings")]
     [SerializeField] private Transform cam;
 
     private bool m_isPlayerInTrigger=false;
@@ -38,10 +38,12 @@ public class PlayerMovement : MonoBehaviour
     private float playerRotator;
     private float targetAngle;
     public float turnDamping=0.5f;
-    private float turnSmoothVelocity=0.5f;
+    
     
     void Update()
     {
+
+        HandleMovement();
         if (IsGrounded())
         {
             animator.SetBool("IsGrounded", true);
@@ -49,8 +51,8 @@ public class PlayerMovement : MonoBehaviour
             StartCoroutine(LandingCheck());
             
         }
-        HandleMovement();
-        StartCoroutine(HandleJumpAndGravity());
+        
+        HandleJumpAndGravity();
         
     }
 
@@ -68,11 +70,13 @@ public class PlayerMovement : MonoBehaviour
       
         animator.SetFloat("InputMagnitude", m_inputDir.magnitude);
 
-       
+        Debug.Log(m_inputDir.magnitude);
 
         if (m_inputDir.magnitude >= 0.1f)
         {
-            
+            Debug.Log(m_inputDir.magnitude);
+
+
             targetAngle = Mathf.Atan2(m_inputDir.x, m_inputDir.z) * Mathf.Rad2Deg + cam.eulerAngles.y;
 
             float smoothedAngle = targetAngle;
@@ -81,27 +85,18 @@ public class PlayerMovement : MonoBehaviour
 
             Vector3 moveDir = Quaternion.Euler(0f, smoothedAngle, 0f) * Vector3.forward;
            
-            controller.Move(moveDir.normalized * m_speed * Time.deltaTime);
+            controller.Move(moveDir.normalized * playerSpeed * Time.deltaTime);
         }
 
-
-
-        if (Input.GetKeyDown(KeyCode.LeftShift))
-        {
-            controller.Move(m_inputDir * m_speed * m_dashSpeed * Time.deltaTime);
-        }
     }
 
-    IEnumerator  HandleJumpAndGravity()
+    public void HandleJumpAndGravity()
     {
         bool grounded = IsGrounded();
-        float originalSpeed = m_speed;
+        float originalSpeed = playerSpeed;
         if (!grounded)
         {
-            
             animator.SetBool("IsGrounded", false);
-            
-            
             animator.SetBool("IsFalling", true);
         }
         else
@@ -115,10 +110,10 @@ public class PlayerMovement : MonoBehaviour
                 if (Input.GetKeyDown(KeyCode.Space))
                 {
                     Debug.Log("SpacePressed");
-                    StartCoroutine(JumpChecker());
+                    JumpChecker();
                     animator.SetBool("IsJumping", true);
                     m_velocity.y = Mathf.Sqrt(-2 * m_jumpSpeed * m_gravity);
-                    yield return null;
+                    
                 }
                 else
                 {
@@ -129,7 +124,7 @@ public class PlayerMovement : MonoBehaviour
         }
         if (IsGrounded())
         {
-            m_speed = originalSpeed;
+            playerSpeed = originalSpeed;
         }
         m_velocity.y += m_gravity * Time.deltaTime;
         controller.Move(m_velocity * Time.deltaTime);
@@ -137,14 +132,13 @@ public class PlayerMovement : MonoBehaviour
 
     }
 
-    IEnumerator JumpChecker()
+    public void JumpChecker()
     {
-
         animator.SetBool("IsFalling",true);
         if (!IsGrounded())
         {
             animator.SetBool("IsJumping", true);
-            yield return null;
+            return;
         }
     }
 
@@ -154,9 +148,9 @@ public class PlayerMovement : MonoBehaviour
         animator.SetBool("IsLanding", true);
         animator.SetBool("IsFalling", false);
 
-        if (m_inputDir.magnitude >= 0.1f)
+        if (m_inputDir.magnitude >= 0.1f)               
         {
-            yield return new WaitForSeconds(1f);
+            yield return new WaitForSeconds(1f);                        //Setting up delay for falling to running animation
         }
         
         yield return new WaitForSeconds(0.1f);
@@ -169,13 +163,19 @@ public class PlayerMovement : MonoBehaviour
 
     public bool IsGrounded()
     {
-        return Physics.CheckSphere(groundChecker.position, m_checkRadius, m_ground);
+        return Physics.CheckSphere(m_groundChecker.position, m_checkRadius, m_ground);
+    }
+
+    public bool IsGroundedCheckForAudio()
+    {
+        return Physics.CheckSphere(m_groundCheckerForAudio.position, m_checkRadius, m_ground);
     }
 
     private void OnDrawGizmos()
     {
         Gizmos.color = Color.red;
-        Gizmos.DrawWireSphere(groundChecker.position, m_checkRadius);
+        Gizmos.DrawWireSphere(m_groundChecker.position, m_checkRadius);
+        Gizmos.DrawWireSphere(m_groundCheckerForAudio.position, m_footSoundCheckRadius);
     }
 
     private void OnTriggerEnter(Collider other)
@@ -193,7 +193,6 @@ public class PlayerMovement : MonoBehaviour
             m_isPlayerInCarRadius = true;
             m_uiManager.OnEnterDeloreanInteraction(m_isPlayerInTrigger); 
         }
-
 
     }
     private void OnTriggerExit(Collider other)
