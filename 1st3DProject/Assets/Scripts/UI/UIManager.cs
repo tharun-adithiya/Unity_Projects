@@ -3,16 +3,19 @@ using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using TMPro;
 using System.Collections;
-
+using System;
 public class UIManager : MonoBehaviour
 {
     [SerializeField] private TextMeshProUGUI TopText;
     [SerializeField] private TextMeshProUGUI m_InteractionText;
-
+    [SerializeField] private GameObject m_gameOverPanel;
+    [SerializeField] private GameObject m_gameFinishedPanel;
+    [SerializeField] private Image m_healthFill;
 
     [SerializeField] private RTXInteraction m_interactor;
     [SerializeField] private PlayerMovement m_playerMovement;
     [SerializeField] private PlayerInventory m_playerInventory;
+    [SerializeField] private AudioManager m_audioManager;
     
     private bool m_isInZone=false;
     private bool m_canPressF;
@@ -25,25 +28,25 @@ public class UIManager : MonoBehaviour
     private void Update()
     {
         if (m_canPressF&& Input.GetKeyDown(KeyCode.F))
-        {   
-            Finish();    
+        {
+            StartCoroutine((OnGameFinish()));    
         }
 
         if (m_isInZone&&Input.GetKey(KeyCode.E))
         {
-            callColect();
+            CallColect();
         }
+    }
+    public void OnClickRestart()
+    {
+        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+        Time.timeScale = 1f;
     }
     IEnumerator OnStart()
     {
         TopText.text = "Turn Back!";
         yield return new WaitForSeconds(5f);
         TopText.text = "";
-    }
-    public void OnClickRestart()
-    {
-        Time.timeScale = 1f;
-        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
 
     public void OnClickMainMenu()
@@ -97,7 +100,7 @@ public class UIManager : MonoBehaviour
     {
         if (isNotSafe)
         {
-            TopText.text = "Collect all the objects before dying:)";
+            TopText.text = "Collect all the materials before dying:)";
             yield return new WaitForSeconds(5f);
             TopText.text = "";
         }
@@ -108,16 +111,42 @@ public class UIManager : MonoBehaviour
 
     }
 
-    public void callColect()
+    public void OnRecieveDamage(float damage)
+    {
+        if (m_healthFill.fillAmount >= 0f)
+        {
+            damage = 10/damage;
+            damage = (float)Math.Round(damage,1);
+            Debug.Log($"Damage={damage}");
+            m_healthFill.fillAmount -=damage;
+        }    
+    }
+
+    public void CallColect()
     {
         m_isInZone=false;
         Debug.Log("E is pressed");
         m_InteractionText.text = "";
         m_interactor.OnPressCollect(inZoneObject);
     }
-    public void Finish()
+    IEnumerator OnGameFinish()
     {
-        Debug.Log("All materials are used");
+        Cursor.lockState = CursorLockMode.None;
+        m_InteractionText.text = "All materials are used!";
+        m_gameFinishedPanel.gameObject.SetActive(true);
+        m_audioManager.OnFinishGame();
+        yield return new WaitForSeconds(3f);
+        m_InteractionText.text = "";
+        TopText.text = "";
+        Time.timeScale = 0f;       
+    }
+    public void OnGameOver()
+    {
+        TopText.text = "";
+        Time.timeScale = 0f;
+        m_audioManager.OnGameOver();
+        Cursor.lockState = CursorLockMode.None;
+        m_gameOverPanel.SetActive(true);
     }
 
 }
