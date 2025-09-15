@@ -1,7 +1,7 @@
 using UnityEngine;
 using System.Collections;
 
-public class PowerUpSwitcher : MonoBehaviour
+public class PowerUpManager : MonoBehaviour
 {
     [HideInInspector] public bool isUsingSpeedPowerUp=false;
     [HideInInspector] public bool isUsingDashPowerUp=false;
