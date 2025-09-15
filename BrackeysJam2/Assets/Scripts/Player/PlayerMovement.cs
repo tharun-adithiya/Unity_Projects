@@ -6,9 +6,10 @@ using UnityEngine;
 public class PlayerMovement : MonoBehaviour
 {
     private Rigidbody2D m_rb;
-    private float moveX;
-    private float moveY;
+    private float m_moveX;
+    private float m_moveY;
     private Vector2 m_direction;
+    private Vector2 m_idleDirection;
     public float moveSpeed=5f;
     
     private bool m_canDash = true;
@@ -19,32 +20,42 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField]private float m_dashCoolDown=0.5f;
     public bool isMovingInNegative;
 
-    [SerializeField] private PowerUpSwitcher m_powerUpProperties;
+    [SerializeField] private PowerUpManager m_powerUpProperties;
     [SerializeField] private PowerUpUIManager m_powerUpUIManager;
     [SerializeField] private Animator m_animator;
     private const string m_lastHorizontalInp = "LastHorizontal";
     private const string m_lastVerticalInp = "LastVertical";
-
     void Start()
     {
         m_rb=GetComponent<Rigidbody2D>();
     }
     void Update()
     {
-        moveX = Input.GetAxisRaw("Horizontal");
-        moveY = Input.GetAxisRaw("Vertical");
-        m_animator.SetFloat("Horizontal", moveX);
-        m_animator.SetFloat("Vertical", moveY);
+        m_moveX = Input.GetAxisRaw("Horizontal");
+        m_moveY = Input.GetAxisRaw("Vertical");
+        m_idleDirection = new Vector2(m_moveX, m_moveY).normalized*Time.deltaTime;
+        m_animator.SetFloat("Horizontal", m_moveX);
+        m_animator.SetFloat("Vertical", m_moveY);
 
-        if (moveX < 0f)
+        if (m_moveX < 0f)
         {
             isMovingInNegative = true;
         }
-        else if(moveX>0f)
+        else if(m_moveX>0f)
         {
             isMovingInNegative = false;
         }
-        PlayerSideAnimations();
+        
+        
+        PlayerIdleAnimations();                         //Plays different Idle Animations           
+        
+        
+        PlayerMovementAnimations();                    //Plays movement based animations
+        PowerUpApply();                               //Applies selected power up
+    }
+
+    public void PowerUpApply()
+    {
         if (m_powerUpProperties.isUsingSpeedPowerUp)
         {
             Debug.Log("Using SpeedPowerUp");
@@ -53,10 +64,10 @@ public class PlayerMovement : MonoBehaviour
                 StartCoroutine(SpeedPowerUp());
             }
         }
-        if (m_powerUpProperties.isUsingDashPowerUp&&m_powerUpProperties.dashCount>0)
+        if (m_powerUpProperties.isUsingDashPowerUp && m_powerUpProperties.dashCount > 0)
         {
             Debug.Log("Using DashPowerUp");
-            if (Input.GetKeyDown(KeyCode.LeftShift)&&m_canDash)
+            if (Input.GetKeyDown(KeyCode.LeftShift) && m_canDash)
             {
                 StartCoroutine(DashPowerUp());
             }
@@ -72,7 +83,7 @@ public class PlayerMovement : MonoBehaviour
     }
     private void Movement()
     {
-        m_direction=new Vector2(moveX,moveY).normalized;
+        m_direction=new Vector2(m_moveX,m_moveY).normalized;
         
         m_rb.linearVelocity=m_direction*moveSpeed;
 
@@ -82,7 +93,7 @@ public class PlayerMovement : MonoBehaviour
         m_canDash = false;
         m_isDashing = true;
         Debug.Log("Dashing");
-        m_direction = new Vector2(moveX, moveY).normalized;
+        m_direction = new Vector2(m_moveX, m_moveY).normalized;
         m_rb.linearVelocity=m_direction*m_powerUpProperties.dashPower;
         yield return new WaitForSeconds(m_dashingTime);
         Debug.Log("DashComplete");
@@ -119,17 +130,23 @@ public class PlayerMovement : MonoBehaviour
 
     }
 
-    public void PlayerSideAnimations()
+    public void PlayerIdleAnimations()
     {
-        if (m_direction != Vector2.zero)
+        
+        if (m_idleDirection != Vector2.zero)
         {
-            Debug.Log("Setting Idle animation");
-           // Debug.Log($"MoveX: {moveX}");
-            m_animator.SetFloat(m_lastHorizontalInp, moveX);
-          // Debug.Log($"MoveY: {moveY}");
-            m_animator.SetFloat(m_lastVerticalInp, moveY);
-            
+            m_idleDirection = Vector2.zero;
+            m_animator.SetFloat(m_lastHorizontalInp, m_moveX);
+            m_animator.SetFloat(m_lastVerticalInp, m_moveY);
         }
+        else
+        {
+            return;
+        }
+
+    }
+    public void PlayerMovementAnimations()
+    {
         if (m_direction.sqrMagnitude > 0.01f)
         {
             float directionMagnitude = m_direction.sqrMagnitude;
@@ -139,7 +156,5 @@ public class PlayerMovement : MonoBehaviour
         {
             m_animator.SetFloat("InputMagnitude", 0f);
         }
-
     }
-
 }

@@ -25,6 +25,7 @@ public class Interactor : MonoBehaviour
         if (collision.gameObject.CompareTag("SelectionBoard"))
         {
             m_isInInteractionZone = false;
+            StartCoroutine(m_powerUpUIManager.ClosePowerUpPanel());
             Debug.Log($"IsInInteractionZone?:{m_isInInteractionZone}");
         }
     }
