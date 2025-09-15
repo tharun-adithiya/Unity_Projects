@@ -4,7 +4,7 @@ using UnityEngine.UI;
 
 public class PowerUpUIManager : MonoBehaviour
 {
-    [SerializeField] private PowerUpSwitcher m_powerUpSwitcher;
+    [SerializeField] private PowerUpManager m_powerUpSwitcher;
     [SerializeField] private DashPowerUp m_dashPowerUpData;
     [SerializeField] private SpeedPowerUp m_speedPowerUpData;
     [SerializeField] GameObject powerUpPanel;

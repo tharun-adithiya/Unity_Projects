@@ -9,7 +9,7 @@ public class DashPowerUp : PowerUpData
 
     public override void Apply(GameObject Target)
     {
-        var switcher = Target.GetComponent<PowerUpSwitcher>();
+        var switcher = Target.GetComponent<PowerUpManager>();
         switcher.isUsingDashPowerUp = true;
         switcher.isUsingSpeedPowerUp=false;
         switcher.dashPower = dashPower;
