@@ -3,7 +3,7 @@ using UnityEngine;
 
 public class BoundsChecker : MonoBehaviour
 {
-    public delegate void BoundsCollisionEvents(string BoundsName);
+    public delegate void BoundsCollisionEvents(string name);
     public static event BoundsCollisionEvents OnPassCamBounds;
     public static void TriggerOnPassBounds(string gameObjName)
     {
