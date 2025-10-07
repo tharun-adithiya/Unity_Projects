@@ -8,10 +8,10 @@ public class SpeedPowerUp : PowerUpData
     public float powerUpDuration = 4f;
     public override void Apply(GameObject Target)
     {
-        var switcher = Target.GetComponent<PowerUpManager>();
-        switcher.isUsingSpeedPowerUp = true;
-        switcher.isUsingDashPowerUp = false;
-        switcher.speedUpPower=speedPower;
-        switcher.speedUpDuration = powerUpDuration;
+        var manager = Target.GetComponent<PowerUpManager>();
+        manager.isUsingSpeedPowerUp = true;
+        manager.isUsingDashPowerUp = false;
+        manager.speedUpPower=speedPower;
+        manager.speedUpDuration = powerUpDuration;
     }
 }

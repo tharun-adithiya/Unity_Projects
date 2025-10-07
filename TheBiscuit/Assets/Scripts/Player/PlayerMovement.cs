@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Runtime.InteropServices.WindowsRuntime;
 using Unity.VisualScripting;
 using UnityEngine;
 
@@ -14,11 +15,13 @@ public class PlayerMovement : MonoBehaviour
     
     private bool m_canDash = true;
     private bool m_isDashing=false;
+    private bool m_isSpeedUp = false;
     [HideInInspector]public bool isInInteractionRange = false;
     [SerializeField] private float m_dashSpeed=10;
     [SerializeField] private float m_dashingTime = 0.3f;
     [SerializeField]private float m_dashCoolDown=0.5f;
     public bool isMovingInNegative;
+    
 
     [SerializeField] private PowerUpManager m_powerUpProperties;
     [SerializeField] private PowerUpUIManager m_powerUpUIManager;
@@ -31,12 +34,13 @@ public class PlayerMovement : MonoBehaviour
     }
     void Update()
     {
+       
         m_moveX = Input.GetAxisRaw("Horizontal");
         m_moveY = Input.GetAxisRaw("Vertical");
         m_idleDirection = new Vector2(m_moveX, m_moveY).normalized*Time.deltaTime;
         m_animator.SetFloat("Horizontal", m_moveX);
         m_animator.SetFloat("Vertical", m_moveY);
-
+        
         if (m_moveX < 0f)
         {
             isMovingInNegative = true;
@@ -59,7 +63,7 @@ public class PlayerMovement : MonoBehaviour
         if (m_powerUpProperties.isUsingSpeedPowerUp)
         {
             Debug.Log("Using SpeedPowerUp");
-            if (Input.GetKeyDown(KeyCode.LeftShift))
+            if (Input.GetKeyDown(KeyCode.LeftShift)&&!m_isSpeedUp)
             {
                 StartCoroutine(SpeedPowerUp());
             }
@@ -107,9 +111,11 @@ public class PlayerMovement : MonoBehaviour
     {
         var oldSpeed = moveSpeed;
         moveSpeed += m_powerUpProperties.speedUpPower;
+        m_isSpeedUp = true;
         Debug.Log("Speed Increased");
         yield return new WaitForSeconds(m_powerUpProperties.speedUpDuration);
         moveSpeed = oldSpeed;
+        m_isSpeedUp = false;
         Debug.Log("Speed Decreased");
     }
     private void OnTriggerEnter2D(Collider2D collision)
