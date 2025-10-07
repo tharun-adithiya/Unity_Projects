@@ -9,11 +9,11 @@ public class DashPowerUp : PowerUpData
 
     public override void Apply(GameObject Target)
     {
-        var switcher = Target.GetComponent<PowerUpManager>();
-        switcher.isUsingDashPowerUp = true;
-        switcher.isUsingSpeedPowerUp=false;
-        switcher.dashPower = dashPower;
-        switcher.dashCount = dashCount;
+        var manager = Target.GetComponent<PowerUpManager>();
+        manager.isUsingDashPowerUp = true;
+        manager.isUsingSpeedPowerUp=false;
+        manager.dashPower = dashPower;
+        manager.dashCount = dashCount;
     }
 
 }

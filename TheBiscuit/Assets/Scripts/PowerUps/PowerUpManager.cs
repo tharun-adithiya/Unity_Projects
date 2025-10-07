@@ -14,13 +14,13 @@ public class PowerUpManager : MonoBehaviour
     [SerializeField]private DashPowerUp m_dashPowerUpData;
     
     
-    private PowerUpData currentPowerUp;
+    private PowerUpData m_currentPowerUp;
 
 
     public void SelectPowerUp(PowerUpData powerUp)
     {
-        currentPowerUp = powerUp;
-        currentPowerUp.Apply(gameObject);
+        m_currentPowerUp = powerUp;
+        m_currentPowerUp.Apply(gameObject);
     }
 
 }
