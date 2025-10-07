@@ -4,23 +4,23 @@ using UnityEngine.UI;
 
 public class PowerUpUIManager : MonoBehaviour
 {
-    [SerializeField] private PowerUpManager m_powerUpSwitcher;
+    [SerializeField] private PowerUpManager m_powerUpManager;
     [SerializeField] private DashPowerUp m_dashPowerUpData;
     [SerializeField] private SpeedPowerUp m_speedPowerUpData;
     [SerializeField] GameObject powerUpPanel;
     [SerializeField] private Animator m_panelAnimator;
     [SerializeField] private AnimationClip m_panelOpenAnimation;
     [SerializeField] private AnimationClip m_panelCloseAnimation;
-    [SerializeField] private Button m_button;
+    
     public void OnChooseDashPowerUp()
     {
-        m_powerUpSwitcher.SelectPowerUp(m_dashPowerUpData);
+        m_powerUpManager.SelectPowerUp(m_dashPowerUpData);
       
         StartCoroutine(ClosePowerUpPanel());
     }
     public void OnChooseSpeedPowerUp()
     {
-        m_powerUpSwitcher.SelectPowerUp(m_speedPowerUpData);
+        m_powerUpManager.SelectPowerUp(m_speedPowerUpData);
         
         StartCoroutine(ClosePowerUpPanel());
     }
