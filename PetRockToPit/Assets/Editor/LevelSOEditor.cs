@@ -1,8 +1,10 @@
 ﻿using log4net.Core;
+using System;
 using System.Collections.Generic;
 using Unity.Cinemachine;
 using UnityEditor;
 using UnityEngine;
+using static LevelSO;
 
 [CustomEditor(typeof(LevelSO))]
 public class LevelSOEditor : Editor
@@ -39,15 +41,39 @@ public class LevelSOEditor : Editor
     GameObject teleportEntry;
     GameObject teleportExit;
 
+    //Properties for limited moves level
+    [SerializeField]int numberOfMoves;
+
+    //Properties for Limited Shots Level
+    [SerializeField] int canon1Shots;
+    [SerializeField] int canon2Shots;
+    [SerializeField] int canon3Shots;
+    [SerializeField] int canon4Shots;
+
+    //Property for timed level
+    [SerializeField] float time;                  
+
+    //Property for bomb level
+    GameObject bomb;
+
+    //Properties for ColorMatching level
+    
+    LevelSO.CanonType canon1Type = LevelSO.CanonType.Default;
+    LevelSO.CanonType canon2Type = LevelSO.CanonType.Default;
+    LevelSO.CanonType canon3Type = LevelSO.CanonType.Default;
+    LevelSO.CanonType canon4Type = LevelSO.CanonType.Default;
+
     // ================= Serialized =================
 
     SerializedProperty levelTypeProp;
     SerializedProperty levelDataProp;
+    
 
     private void OnEnable()
     {
         levelTypeProp = serializedObject.FindProperty("levelType");
         levelDataProp = serializedObject.FindProperty("levelData");
+        
     }
 
     public override void OnInspectorGUI()
@@ -59,7 +85,7 @@ public class LevelSOEditor : Editor
         // ===== Level Type =====
         EditorGUILayout.PropertyField(levelTypeProp);
         EnsureCorrectLevelDataInstance(levelSO);
-
+        
         EditorGUILayout.Space();
 
         // ===== Level-type specific editor UI =====
@@ -69,9 +95,25 @@ public class LevelSOEditor : Editor
                 DrawMoveablePlatformSection();
                 break;
 
-            case LevelSO.LevelType.Teleports:
+            case LevelSO.LevelType.Portals:
                 DrawTeleportSection();
                 break;
+            case LevelSO.LevelType.LimitedMoves:
+                DrawLimitedMovesSection();
+                break;
+            case LevelSO.LevelType.Timed:
+                DrawTimedLevelSection();
+                break;
+            case LevelSO.LevelType.LimitedShots:
+                DrawLimitedShotsSection();
+                break;
+            case LevelSO.LevelType.Bomb:
+                DrawBombLevelSection();
+                break;
+            case LevelSO.LevelType.ColorMatching:
+                DrawColorMatchSection();
+                break;
+
         }
 
         EditorGUILayout.Space();
@@ -132,7 +174,40 @@ public class LevelSOEditor : Editor
                 true
             );
     }
+    void DrawLimitedMovesSection()
+    {
+        EditorGUILayout.LabelField("LimitedMoves", EditorStyles.boldLabel);
+        numberOfMoves = EditorGUILayout.IntField("Number of moves", Mathf.Clamp(numberOfMoves,0,100));
+    }
 
+    void DrawBombLevelSection()
+    {
+        EditorGUILayout.LabelField("Bomb Level", EditorStyles.boldLabel);
+        bomb = (GameObject)EditorGUILayout.ObjectField("Bomb Prefab", bomb, typeof(GameObject), true);
+    }
+    void DrawTimedLevelSection()
+    {
+        EditorGUILayout.LabelField("Timed Level", EditorStyles.boldLabel);
+        time = EditorGUILayout.FloatField("Time",time);
+    }
+    void DrawLimitedShotsSection()
+    {
+        EditorGUILayout.LabelField("Limited Shots Level", EditorStyles.boldLabel);
+        EditorGUILayout.Space();
+        canon1Shots = EditorGUILayout.IntField("Shots1", canon1Shots);
+        canon2Shots = EditorGUILayout.IntField("Shots2", canon2Shots);
+        canon3Shots = EditorGUILayout.IntField("Shots3", canon3Shots);
+        canon4Shots = EditorGUILayout.IntField("Shots4", canon4Shots);
+    }
+    void DrawColorMatchSection()
+    {
+        EditorGUILayout.LabelField("Color Match Level", EditorStyles.boldLabel);
+        EditorGUILayout.Space();
+        canon1Type = (LevelSO.CanonType)EditorGUILayout.EnumPopup("Canon1 Type", canon1Type);
+        canon2Type = (LevelSO.CanonType)EditorGUILayout.EnumPopup("Canon2 Type", canon2Type);
+        canon3Type = (LevelSO.CanonType)EditorGUILayout.EnumPopup("Canon3 Type", canon3Type);
+        canon4Type = (LevelSO.CanonType)EditorGUILayout.EnumPopup("Canon4 Type", canon4Type);
+    }
     void DrawCommonExportSection()
     {
         EditorGUILayout.LabelField("Level Data Export Tools", EditorStyles.boldLabel);
@@ -195,7 +270,6 @@ public class LevelSOEditor : Editor
             
         }
     }
-
     void DrawCanonSection(
         string label,
         ref GameObject canon,
@@ -227,7 +301,9 @@ public class LevelSOEditor : Editor
     {
         LevelSO levelSO = (LevelSO)target;
         LevelSO.Default data = levelSO.levelData;
-        data.tilemapData = tilemapData;
+        
+        // ==== TILEMAP ===
+        if(tilemapData)data.tilemapData = tilemapData;
         // ===== GRID =====
         if (grid)
             data.gridPosition = grid.transform.position;
@@ -238,8 +314,11 @@ public class LevelSOEditor : Editor
 
         // ===== CAMERA =====
         if (cam)
+        {
             data.cameraOrthographicSize = cam.Lens.OrthographicSize;
-
+            data.cameraPosition = cam.transform.position;
+        }
+         
         // ===== CANON BALL BOUNDS =====
         if (canonBallBoundsParent)
         {
@@ -274,7 +353,34 @@ public class LevelSOEditor : Editor
             ref data.canon4WaypointsParentPosition,
             ref data.canon4WaypointsHolderScale);
 
-        // ===== MOVEABLE PLATFORM =====
+        // ===== Switch based on the current level type =====
+        /*switch (levelSO.levelData)
+        {
+            case LevelSO.MoveablePlatform mp:
+                if (moveablePlatformTile) mp.moveablePlatformPosition = moveablePlatformTile.transform.position;
+                if (waypointA) mp.waypointAPosition = waypointA.position;
+                if (waypointB) mp.waypointBPosition = waypointB.position;
+                break;
+            case LevelSO.Teleport tp:
+                if (teleportEntry) tp.teleportEntryPosition = teleportEntry.transform.position;
+                if (teleportExit) tp.teleportExitPosition = teleportExit.transform.position;
+                break;
+            case LevelSO.BombLevel bombLevel:
+                bombLevel.bombPosition = bomb.transform.position;
+                break;
+            case LevelSO.LimitedMoves lm:
+                lm.numberOfMoves = numberOfMoves;
+                break;
+            case LevelSO.LimitedShots limitedShotsLevel:
+                limitedShotsLevel.canon1NumberOfShots = canon1Shots;
+                limitedShotsLevel.canon2NumberOfShots = canon2Shots;
+                limitedShotsLevel.canon3NumberOfShots = canon3Shots;
+                limitedShotsLevel.canon4NumberOfShots = canon4Shots;
+                break;
+            case LevelSO.Timed timedLevel:
+                timedLevel.time= time;
+                break;
+        }*/
         if (data is LevelSO.MoveablePlatform mp)
         {
             if (moveablePlatformTile)
@@ -295,6 +401,32 @@ public class LevelSOEditor : Editor
 
             if (teleportExit)
                 tp.teleportExitPosition = teleportExit.transform.position;
+        }
+        if (data is LevelSO.BombLevel bombLevel)
+        {
+            bombLevel.bombPosition = bomb.transform.position;
+        }
+        if (data is LevelSO.LimitedMoves lm)
+        {
+            lm.numberOfMoves = numberOfMoves;
+        }
+        if (data is LevelSO.Timed timedLevelData)
+        {
+            timedLevelData.time = time;
+        }
+        if (data is LevelSO.LimitedShots limitedShotsLevel)
+        {
+            limitedShotsLevel.canon1NumberOfShots = canon1Shots;
+            limitedShotsLevel.canon2NumberOfShots = canon2Shots;
+            limitedShotsLevel.canon3NumberOfShots = canon3Shots;
+            limitedShotsLevel.canon4NumberOfShots = canon4Shots;
+        }
+        if (data is LevelSO.ColourMatch colorMatchLevel)
+        {
+            colorMatchLevel.canonTypes[0] = canon1Type;
+            colorMatchLevel.canonTypes[1] = canon2Type;
+            colorMatchLevel.canonTypes[2] = canon3Type;
+            colorMatchLevel.canonTypes[3] = canon4Type;
         }
         EditorUtility.SetDirty(levelSO);
         AssetDatabase.SaveAssets();
@@ -347,10 +479,10 @@ public class LevelSOEditor : Editor
         DrawVectorList("Bounds Waypoints", data.canonBallBoundsPositions);
 
         // ===== CANONS =====
-        DrawCanonPreview("Canon 1", data.canonObject1Pos, data.canonObject1Waypoints);
-        DrawCanonPreview("Canon 2", data.canonObject2Pos, data.canonObject2Waypoints);
-        DrawCanonPreview("Canon 3", data.canonObject3Pos, data.canonObject3Waypoints);
-        DrawCanonPreview("Canon 4", data.canonObject4Pos, data.canonObject4Waypoints);
+        DrawCanonPreview("Canon 1", data.canonObject1Pos, data.canonObject1Waypoints,data.canon1WaypointsParentPosition,data.canon1WaypointsHolderScale);
+        DrawCanonPreview("Canon 2", data.canonObject2Pos, data.canonObject2Waypoints, data.canon2WaypointsParentPosition,data.canon2WaypointsHolderScale);
+        DrawCanonPreview("Canon 3", data.canonObject3Pos, data.canonObject3Waypoints, data.canon3WaypointsParentPosition,data.canon3WaypointsHolderScale);
+        DrawCanonPreview("Canon 4", data.canonObject4Pos, data.canonObject4Waypoints, data.canon4WaypointsParentPosition,data.canon4WaypointsHolderScale);
 
         // ===== MOVEABLE PLATFORM =====
         if (data is LevelSO.MoveablePlatform mp)
@@ -370,7 +502,41 @@ public class LevelSOEditor : Editor
             EditorGUILayout.Vector3Field("Entry Position", tp.teleportEntryPosition);
             EditorGUILayout.Vector3Field("Exit Position", tp.teleportExitPosition);
         }
-
+        if (data is LevelSO.LimitedMoves lm)
+        {
+            EditorGUILayout.Space();
+            EditorGUILayout.LabelField("Limited Moves", EditorStyles.boldLabel);
+            EditorGUILayout.IntField("Number of moves", lm.numberOfMoves);
+        }
+        if (data is LevelSO.LimitedShots limitedShotsLevel)
+        {
+            EditorGUILayout.Space();
+            EditorGUILayout.LabelField("Limited Shots", EditorStyles.boldLabel);
+            EditorGUILayout.IntField("Number of moves", limitedShotsLevel.canon1NumberOfShots);
+            EditorGUILayout.IntField("Number of moves", limitedShotsLevel.canon2NumberOfShots);
+            EditorGUILayout.IntField("Number of moves", limitedShotsLevel.canon3NumberOfShots);
+            EditorGUILayout.IntField("Number of moves", limitedShotsLevel.canon4NumberOfShots);
+        }
+        if (data is LevelSO.Timed timedLevelData)
+        {
+            EditorGUILayout.Space();
+            EditorGUILayout.FloatField("Time", timedLevelData.time);
+        }
+        if (data is LevelSO.BombLevel bombLevel)
+        {
+            EditorGUILayout.Space();
+            EditorGUILayout.LabelField("Bomb level", EditorStyles.boldLabel);
+            EditorGUILayout.Vector3Field("Bomb Position", bombLevel.bombPosition);
+        }
+        if (data is LevelSO.ColourMatch colorMatchLevelData)
+        {
+            EditorGUILayout.Space();
+            EditorGUILayout.LabelField("Color Match Level", EditorStyles.boldLabel);
+            EditorGUILayout.EnumFlagsField("Canon1 Type", colorMatchLevelData.canonTypes[0]);
+            EditorGUILayout.EnumFlagsField("Canon2 Type", colorMatchLevelData.canonTypes[1]);
+            EditorGUILayout.EnumFlagsField("Canon3 Type", colorMatchLevelData.canonTypes[2]);
+            EditorGUILayout.EnumFlagsField("Canon4 Type", colorMatchLevelData.canonTypes[3]);
+        }
         EditorGUI.indentLevel--;
         EditorGUI.EndDisabledGroup();
     }
@@ -397,11 +563,13 @@ public class LevelSOEditor : Editor
     private void DrawCanonPreview(
     string label,
     Vector3 canonPos,
-    List<Vector3> waypoints)
+    List<Vector3> waypoints,Vector3 canonSliderPos,Vector3 sliderScale)
     {
         EditorGUILayout.Space();
         EditorGUILayout.LabelField(label, EditorStyles.boldLabel);
         EditorGUILayout.Vector3Field("Position", canonPos);
+        EditorGUILayout.Vector3Field("Slider position", canonSliderPos);
+        EditorGUILayout.Vector3Field("Slider scale", sliderScale);
         DrawVectorList("Waypoints", waypoints);
     }
 
@@ -439,8 +607,7 @@ public class LevelSOEditor : Editor
 
     private void EnsureCorrectLevelDataInstance(LevelSO levelSO)
     {
-        if (levelSO.levelData == null ||
-            !IsCorrectType(levelSO))
+        if (levelSO.levelData == null || !IsCorrectType(levelSO))
         {
             switch (levelSO.levelType)
             {
@@ -452,8 +619,23 @@ public class LevelSOEditor : Editor
                     levelSO.levelData = new LevelSO.MoveablePlatform();
                     break;
 
-                case LevelSO.LevelType.Teleports:
+                case LevelSO.LevelType.Portals:
                     levelSO.levelData = new LevelSO.Teleport();
+                    break;
+                case LevelSO.LevelType.LimitedMoves:
+                    levelSO.levelData=new LevelSO.LimitedMoves();
+                    break;
+                case LevelSO.LevelType.LimitedShots:
+                    levelSO.levelData = new LevelSO.LimitedShots();
+                    break;
+                case LevelSO.LevelType.Timed:
+                    levelSO.levelData=new LevelSO.Timed();
+                    break;
+                case LevelSO.LevelType.Bomb:
+                    levelSO.levelData = new LevelSO.BombLevel();
+                    break;
+                case LevelSO.LevelType.ColorMatching:
+                    levelSO.levelData = new LevelSO.ColourMatch();
                     break;
             }
         }
@@ -461,7 +643,10 @@ public class LevelSOEditor : Editor
     private void EnsureLevelDataExists(LevelSO levelSO)
     {
         if (levelSO.levelData != null)
+        {
             return;
+        }
+        else Debug.LogWarning("LevelData is not properly assigned");
 
         switch (levelSO.levelType)
         {
@@ -469,8 +654,24 @@ public class LevelSOEditor : Editor
                 levelSO.levelData = new LevelSO.MoveablePlatform();
                 break;
 
-            case LevelSO.LevelType.Teleports:
+            case LevelSO.LevelType.Portals:
                 levelSO.levelData = new LevelSO.Teleport();
+                break;
+
+            case LevelSO.LevelType.LimitedMoves:
+                levelSO.levelData=new LevelSO.LimitedMoves();
+                break;
+            case LevelSO.LevelType.LimitedShots:
+                levelSO.levelData = new LevelSO.LimitedShots();
+                break;
+            case LevelSO.LevelType.Timed:
+                levelSO.levelData=new LevelSO.Timed();
+                break;
+            case LevelSO.LevelType.Bomb:
+                levelSO.levelData = new LevelSO.BombLevel();
+                break;
+            case LevelSO.LevelType.ColorMatching:
+                levelSO.levelData = new LevelSO.ColourMatch();
                 break;
 
             default:
@@ -491,9 +692,22 @@ public class LevelSOEditor : Editor
             LevelSO.LevelType.MoveablePlatform =>
                 levelSO.levelData is LevelSO.MoveablePlatform,
 
-            LevelSO.LevelType.Teleports =>
+            LevelSO.LevelType.Portals =>
                 levelSO.levelData is LevelSO.Teleport,
 
+            LevelSO.LevelType.LimitedMoves =>
+                levelSO.levelData is LevelSO.LimitedMoves,
+
+            LevelSO.LevelType.LimitedShots =>
+                levelSO.levelData is LevelSO.LimitedShots,
+
+            LevelSO.LevelType.Timed=>
+                levelSO.levelData is LevelSO.Timed,
+
+            LevelSO.LevelType.Bomb =>
+                levelSO.levelData is LevelSO.BombLevel,
+            LevelSO.LevelType.ColorMatching =>
+                levelSO.levelData is LevelSO.ColourMatch,
             _ => false
         };
     }
